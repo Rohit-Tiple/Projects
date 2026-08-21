@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rohit Tiple — Embedded Systems &amp; IoT Engineer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0E11;
+    --panel:#12171C;
+    --panel-2:#161C22;
+    --line:#232B31;
+    --copper:#C17B3E;
+    --copper-bright:#E0A567;
+    --trace-green:#2F5C4C;
+    --scope:#6FE7DD;
+    --text:#E8EDF0;
+    --text-dim:#8B98A3;
+    --text-faint:#5C6870;
+    --radius:2px;
+    --display:'Space Grotesk',sans-serif;
+    --mono:'IBM Plex Mono',monospace;
+    --body:'Inter',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--body);
+    line-height:1.6;
+    overflow-x:hidden;
+  }
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *{animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important;}
+  }
+
+  a{color:inherit;text-decoration:none;}
+  :focus-visible{outline:2px solid var(--scope); outline-offset:3px;}
+
+  /* ---------- background circuit texture ---------- */
+  .pcb-bg{
+    position:fixed; inset:0; z-index:0; pointer-events:none; opacity:0.5;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size:48px 48px;
+    mask-image:radial-gradient(ellipse 80% 60% at 50% 20%, black 40%, transparent 90%);
+  }
+
+  .wrap{max-width:1080px; margin:0 auto; padding:0 28px; position:relative; z-index:1;}
+
+  /* ---------- nav ---------- */
+  header{
+    position:fixed; top:0; left:0; right:0; z-index:50;
+    background:rgba(11,14,17,0.85); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  nav{max-width:1080px; margin:0 auto; padding:16px 28px; display:flex; align-items:center; justify-content:space-between;}
+  .logo{font-family:var(--mono); font-size:14px; letter-spacing:0.02em; color:var(--text); display:flex; align-items:center; gap:8px;}
+  .logo .dot{width:8px; height:8px; border-radius:50%; background:var(--copper); box-shadow:0 0 8px var(--copper);}
+  .nav-links{display:flex; gap:2px; font-family:var(--mono); font-size:12px;}
+  .nav-links a{
+    padding:8px 14px; color:var(--text-dim); border:1px solid transparent; border-radius:var(--radius);
+    transition:color .2s, border-color .2s;
+  }
+  .nav-links a:hover{color:var(--scope); border-color:var(--line);}
+  .nav-links{display:none;}
+  @media (min-width:720px){ .nav-links{display:flex;} }
+
+  /* ---------- hero ---------- */
+  .hero{
+    min-height:100svh; display:flex; flex-direction:column; justify-content:center;
+    padding-top:90px; position:relative;
+  }
+  .eyebrow{
+    font-family:var(--mono); font-size:12px; color:var(--copper-bright);
+    letter-spacing:0.12em; text-transform:uppercase; margin-bottom:20px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .eyebrow::before{content:''; width:24px; height:1px; background:var(--copper-bright);}
+  h1{
+    font-family:var(--display); font-weight:700;
+    font-size:clamp(2.4rem, 7vw, 5rem); line-height:1.03; letter-spacing:-0.02em;
+    max-width:900px;
+  }
+  h1 .accent{color:var(--copper-bright);}
+  .hero-sub{
+    font-family:var(--body); color:var(--text-dim); font-size:clamp(1rem,2vw,1.15rem);
+    max-width:560px; margin-top:24px;
+  }
+  .hero-cta{display:flex; flex-wrap:wrap; gap:14px; margin-top:36px;}
+  .btn{
+    font-family:var(--mono); font-size:13px; padding:13px 22px; border-radius:var(--radius);
+    display:inline-flex; align-items:center; gap:8px; transition:all .2s; border:1px solid var(--line);
+  }
+  .btn-primary{background:var(--copper); color:#0B0E11; font-weight:600; border-color:var(--copper);}
+  .btn-primary:hover{background:var(--copper-bright); border-color:var(--copper-bright);}
+  .btn-ghost{color:var(--text); border-color:var(--line);}
+  .btn-ghost:hover{border-color:var(--scope); color:var(--scope);}
+
+  /* schematic trace under hero */
+  .trace-rail{margin-top:64px; display:flex; align-items:center; gap:0; max-width:640px;}
+  .trace-rail svg{display:block; width:100%; height:auto;}
+  .trace-path{stroke-dasharray:600; stroke-dashoffset:600; animation:draw 1.8s ease forwards .3s;}
+  @keyframes draw{to{stroke-dashoffset:0;}}
+  @media (prefers-reduced-motion: reduce){ .trace-path{stroke-dashoffset:0; animation:none;} }
+
+  /* ---------- section shell ---------- */
+  section{padding:110px 0; position:relative; border-top:1px solid var(--line);}
+  .sec-head{display:flex; align-items:baseline; gap:16px; margin-bottom:52px;}
+  .sec-num{font-family:var(--mono); font-size:12px; color:var(--text-faint);}
+  .sec-title{font-family:var(--display); font-weight:600; font-size:clamp(1.6rem,3.5vw,2.2rem);}
+
+  /* ---------- about ---------- */
+  .about-grid{display:grid; grid-template-columns:1fr; gap:40px;}
+  @media (min-width:800px){ .about-grid{grid-template-columns:1.3fr 1fr;} }
+  .about-text{font-size:1.05rem; color:#CBD3D8; max-width:56ch;}
+  .about-text p + p{margin-top:16px;}
+  .about-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:26px;
+    font-family:var(--mono); font-size:13px;
+  }
+  .about-card .row{display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--line); color:var(--text-dim);}
+  .about-card .row:last-child{border-bottom:none;}
+  .about-card .row span:last-child{color:var(--text);}
+
+  /* ---------- experience (schematic timeline) ---------- */
+  .timeline{position:relative; padding-left:32px;}
+  .timeline::before{
+    content:''; position:absolute; left:5px; top:6px; bottom:6px; width:2px;
+    background:linear-gradient(var(--copper), var(--trace-green));
+  }
+  .t-item{position:relative; padding-bottom:44px;}
+  .t-item:last-child{padding-bottom:0;}
+  .t-item::before{
+    content:''; position:absolute; left:-32px; top:4px; width:12px; height:12px; border-radius:50%;
+    background:var(--bg); border:2px solid var(--copper-bright); box-shadow:0 0 0 4px var(--bg);
+  }
+  .t-role{font-family:var(--display); font-weight:600; font-size:1.15rem;}
+  .t-meta{font-family:var(--mono); font-size:12px; color:var(--copper-bright); margin-top:4px;}
+  .t-desc{color:var(--text-dim); margin-top:10px; max-width:60ch; font-size:0.95rem;}
+
+  /* ---------- projects ---------- */
+  .proj-grid{display:grid; grid-template-columns:1fr; gap:1px; background:var(--line); border:1px solid var(--line);}
+  @media (min-width:720px){ .proj-grid{grid-template-columns:1fr 1fr;} }
+  .proj-card{background:var(--panel); padding:32px; transition:background .25s; position:relative;}
+  .proj-card:hover{background:var(--panel-2);}
+  .proj-tag{font-family:var(--mono); font-size:11px; color:var(--text-faint); letter-spacing:0.08em;}
+  .proj-title{font-family:var(--display); font-weight:600; font-size:1.3rem; margin-top:10px;}
+  .proj-desc{color:var(--text-dim); font-size:0.93rem; margin-top:12px; max-width:48ch;}
+  .proj-year{
+    position:absolute; top:32px; right:32px; font-family:var(--mono); font-size:12px; color:var(--scope);
+  }
+  .proj-card::after{
+    content:''; position:absolute; left:32px; bottom:0; width:0; height:2px; background:var(--copper-bright);
+    transition:width .3s;
+  }
+  .proj-card:hover::after{width:40px;}
+
+  /* ---------- skills ---------- */
+  .skill-groups{display:grid; grid-template-columns:1fr; gap:28px;}
+  @media (min-width:720px){ .skill-groups{grid-template-columns:repeat(3,1fr);} }
+  .skill-group-label{font-family:var(--mono); font-size:11px; color:var(--copper-bright); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:14px;}
+  .pins{display:flex; flex-wrap:wrap; gap:8px;}
+  .pin{
+    font-family:var(--mono); font-size:12.5px; padding:7px 12px; border:1px solid var(--line);
+    border-radius:var(--radius); color:var(--text); background:var(--panel);
+  }
+
+  /* ---------- education & certs ---------- */
+  .edu-cert{display:grid; grid-template-columns:1fr; gap:56px;}
+  @media (min-width:800px){ .edu-cert{grid-template-columns:1fr 1fr;} }
+  .edu-item{border-left:2px solid var(--trace-green); padding-left:18px; margin-bottom:26px;}
+  .edu-item:last-child{margin-bottom:0;}
+  .edu-school{font-family:var(--display); font-weight:600; font-size:1.05rem;}
+  .edu-deg{color:var(--text-dim); font-size:0.92rem; margin-top:4px;}
+  .edu-meta{font-family:var(--mono); font-size:11.5px; color:var(--text-faint); margin-top:6px;}
+  .cert-list{display:flex; flex-direction:column; gap:10px;}
+  .cert-item{
+    display:flex; align-items:center; gap:12px; font-size:0.93rem; color:var(--text);
+    padding:12px 14px; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  }
+  .cert-item .chip{width:6px; height:6px; border-radius:50%; background:var(--scope); flex-shrink:0; box-shadow:0 0 6px var(--scope);}
+
+  /* ---------- contact / footer ---------- */
+  footer{padding:100px 0 50px; border-top:1px solid var(--line);}
+  .contact-title{
+    font-family:var(--display); font-weight:700; font-size:clamp(2rem,6vw,3.4rem); max-width:700px; line-height:1.05;
+  }
+  .contact-links{display:flex; flex-wrap:wrap; gap:14px; margin-top:36px;}
+  .foot-bottom{
+    margin-top:80px; padding-top:24px; border-top:1px solid var(--line);
+    display:flex; flex-wrap:wrap; justify-content:space-between; gap:12px;
+    font-family:var(--mono); font-size:11.5px; color:var(--text-faint);
+  }
+</style>
+</head>
+<body>
+
+<div class="pcb-bg"></div>
+
+<header>
+  <nav>
+    <a href="#top" class="logo"><span class="dot"></span>ROHIT.TIPLE</a>
+    <div class="nav-links">
+      <a href="#about">About</a>
+      <a href="#experience">Experience</a>
+      <a href="#projects">Projects</a>
+      <a href="#skills">Skills</a>
+      <a href="#contact">Contact</a>
+    </div>
+  </nav>
+</header>
+
+<main>
+  <section id="top" class="hero wrap" style="border-top:none;">
+    <div class="eyebrow">Electronics &amp; Telecommunication Engineering — Nagpur</div>
+    <h1>Hi, I'm <span class="accent">Rohit Tiple</span>.</h1>
+    <p class="hero-sub">A B.Tech ECE student who builds embedded and IoT systems — from door locks you unlock over Wi-Fi to sensors that listen to a room and act on what they hear.</p>
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="#projects">View projects</a>
+      <a class="btn btn-ghost" href="mailto:rohittiplee@gmail.com">Get in touch</a>
+    </div>
+    <div class="trace-rail" aria-hidden="true">
+      <svg viewBox="0 0 640 40" fill="none">
+        <path class="trace-path" d="M0 20 H160 L180 5 H320 L340 35 H480 L500 20 H640" stroke="#C17B3E" stroke-width="1.5"/>
+        <circle cx="0" cy="20" r="4" fill="#E0A567"/>
+        <circle cx="320" cy="35" r="4" fill="#6FE7DD"/>
+        <circle cx="640" cy="20" r="4" fill="#E0A567"/>
+      </svg>
+    </div>
+  </section>
+
+  <section id="about">
+    <div class="wrap">
+      <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">About</h2></div>
+      <div class="about-grid">
+        <div class="about-text">
+          <p>I'm currently pursuing my B.Tech in Electronics and Telecommunication Engineering at Yeshwantrao Chavan College of Engineering (YCCE), Nagpur, after completing my Diploma at Government Polytechnic College, Nagpur.</p>
+          <p>My work sits at the intersection of hardware and connectivity — microcontrollers, sensors, and the platforms that let you monitor and control them from a phone. I've spent time on factory floors and wiring benches too, which keeps my circuit designs grounded in how things actually get built and maintained.</p>
+        </div>
+        <div class="about-card">
+          <div class="row"><span>Based in</span><span>Nagpur, India</span></div>
+          <div class="row"><span>Focus</span><span>Embedded Systems, IoT</span></div>
+          <div class="row"><span>Degree</span><span>B.Tech ECE, 2024–2027</span></div>
+          <div class="row"><span>Diploma score</span><span>83.40%</span></div>
+          <div class="row"><span>Email</span><span>rohittiplee@gmail.com</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="experience">
+    <div class="wrap">
+      <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title">Experience</h2></div>
+      <div class="timeline">
+        <div class="t-item">
+          <div class="t-role">Quality Assurance Inspector</div>
+          <div class="t-meta">Dhoot Transmission Pvt. Ltd — May 2024 to Sept 2024</div>
+          <div class="t-desc">Inspected automotive wiring harness systems and learned harness routing techniques used in vehicle assembly, gaining hands-on exposure to design and testing standards.</div>
+        </div>
+        <div class="t-item">
+          <div class="t-role">Industrial Automation Trainee</div>
+          <div class="t-meta">Ketron Industries — Jun 2024 to Jul 2024</div>
+          <div class="t-desc">Worked with electrical control panels and industrial automation systems, focused on understanding Low Tension (LT) switchboards.</div>
+        </div>
+        <div class="t-item">
+          <div class="t-role">Field Trainee</div>
+          <div class="t-meta">Bahe Electrical Services — Jan 2024 to Apr 2024</div>
+          <div class="t-desc">Assisted on real-world electrical projects on-site, working alongside field technicians to understand real-time troubleshooting challenges.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="projects">
+    <div class="wrap">
+      <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-title">Projects</h2></div>
+      <div class="proj-grid">
+        <div class="proj-card">
+          <span class="proj-year">2025</span>
+          <div class="proj-tag">IOT · AUDIO SENSING</div>
+          <div class="proj-title">Sound Pollution Monitoring System</div>
+          <div class="proj-desc">Measures ambient sound levels in decibels using a microphone sensor, showing live readings on a 16×2 LCD and streaming them to the Blynk app for remote monitoring.</div>
+        </div>
+        <div class="proj-card">
+          <span class="proj-year">2025</span>
+          <div class="proj-tag">IOT · ACCESS CONTROL</div>
+          <div class="proj-title">IoTLockX — Smart Door Lock</div>
+          <div class="proj-desc">Lets you lock or unlock a door from your phone. A switch in the Blynk app drives a servo motor — flip it on to unlock, off to lock securely.</div>
+        </div>
+        <div class="proj-card">
+          <span class="proj-year">2025</span>
+          <div class="proj-tag">EMBEDDED · AUTOMATION</div>
+          <div class="proj-title">8051 Room Light Controller</div>
+          <div class="proj-desc">An automated lighting system built on the 8051 microcontroller with a PIR motion sensor, switching room lights on and off automatically as people come and go.</div>
+        </div>
+        <div class="proj-card">
+          <span class="proj-year">2023</span>
+          <div class="proj-tag">IOT · AGRICULTURE</div>
+          <div class="proj-title">Smart Agriculture Monitoring</div>
+          <div class="proj-desc">Controls and monitors a farm remotely from a smartphone, with real-time motor status tracking, internet-based switching, and fire alert notifications.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="skills">
+    <div class="wrap">
+      <div class="sec-head"><span class="sec-num">04</span><h2 class="sec-title">Skills</h2></div>
+      <div class="skill-groups">
+        <div>
+          <div class="skill-group-label">Programming &amp; Controllers</div>
+          <div class="pins">
+            <span class="pin">Embedded C</span><span class="pin">C++</span>
+            <span class="pin">8051</span><span class="pin">Arduino</span><span class="pin">ESP32</span>
+          </div>
+        </div>
+        <div>
+          <div class="skill-group-label">Circuit &amp; Tools</div>
+          <div class="pins">
+            <span class="pin">Circuit Design</span><span class="pin">Troubleshooting</span><span class="pin">PCB</span>
+            <span class="pin">MATLAB</span><span class="pin">Arduino IDE</span><span class="pin">Tinkercad</span><span class="pin">Fritzing</span>
+          </div>
+        </div>
+        <div>
+          <div class="skill-group-label">IoT Platforms</div>
+          <div class="pins">
+            <span class="pin">Blynk</span><span class="pin">ThingSpeak</span><span class="pin">Cisco Packet Tracer</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="education">
+    <div class="wrap">
+      <div class="sec-head"><span class="sec-num">05</span><h2 class="sec-title">Education &amp; Certificates</h2></div>
+      <div class="edu-cert">
+        <div>
+          <div class="edu-item">
+            <div class="edu-school">Yeshwantrao Chavan College of Engineering, Nagpur</div>
+            <div class="edu-deg">B.Tech, Electronics &amp; Telecommunication Engineering</div>
+            <div class="edu-meta">2024 – 2027</div>
+          </div>
+          <div class="edu-item">
+            <div class="edu-school">Government Polytechnic College, Nagpur</div>
+            <div class="edu-deg">Diploma, Electronics &amp; Telecommunication Engineering</div>
+            <div class="edu-meta">2021 – 2024 · 83.40%</div>
+          </div>
+          <div class="edu-item">
+            <div class="edu-school">Shri Rajendra High School, Nagpur</div>
+            <div class="edu-deg">SSC</div>
+            <div class="edu-meta">2009 – 2021 · 71.40%</div>
+          </div>
+        </div>
+        <div class="cert-list">
+          <div class="cert-item"><span class="chip"></span>Embedded System Training</div>
+          <div class="cert-item"><span class="chip"></span>TCS iON Career Edge</div>
+          <div class="cert-item"><span class="chip"></span>Internet of Things (IoT)</div>
+          <div class="cert-item"><span class="chip"></span>Major Project Exhibition — Winner</div>
+          <div class="cert-item"><span class="chip"></span>Innotech Project — Runner-up</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer id="contact">
+    <div class="wrap">
+      <div class="sec-num" style="font-family:var(--mono); font-size:12px; color:var(--text-faint);">06 — Contact</div>
+      <div class="contact-title">Have a project in mind? Let's wire it up.</div>
+      <div class="contact-links">
+        <a class="btn btn-primary" href="mailto:rohittiplee@gmail.com">rohittiplee@gmail.com</a>
+        <a class="btn btn-ghost" href="https://linkedin.com/in/rohit-tiple-2b8ba3212" target="_blank" rel="noopener">LinkedIn ↗</a>
+        <a class="btn btn-ghost" href="tel:+919284445390">+91 92844 45390</a>
+      </div>
+      <div class="foot-bottom">
+        <span>© 2026 Rohit Tiple</span>
+        <span>Nagpur, India</span>
+      </div>
+    </div>
+  </footer>
+</main>
+
+</body>
+</html>
