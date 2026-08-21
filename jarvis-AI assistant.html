@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J.A.R.V.I.S.</title>
+<style>
+  :root{
+    --bg:#050a0f;
+    --bg2:#081420;
+    --cyan:#4ee7ff;
+    --cyan-dim:#1c6b7a;
+    --cyan-glow:rgba(78,231,255,0.55);
+    --amber:#ffb454;
+    --red:#ff4d4d;
+    --text:#d6f4ff;
+    --text-dim:#6a94a3;
+    --panel-border:rgba(78,231,255,0.25);
+    --font-display:'Orbitron', 'Segoe UI', sans-serif;
+    --font-mono:'Share Tech Mono','Consolas',monospace;
+  }
+  @font-face{
+    font-family:'Orbitron';
+    src:local('Arial');
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    background:
+      radial-gradient(ellipse at 50% 0%, #0a1c28 0%, var(--bg) 55%, #020304 100%);
+    color:var(--text);
+    font-family:var(--font-mono);
+    min-height:100vh;
+    overflow-x:hidden;
+    display:flex;
+    justify-content:center;
+    padding:24px 16px 40px;
+  }
+  /* scanline / grid atmosphere */
+  body::before{
+    content:"";
+    position:fixed; inset:0;
+    background-image:
+      linear-gradient(rgba(78,231,255,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(78,231,255,0.035) 1px, transparent 1px);
+    background-size:38px 38px;
+    pointer-events:none;
+    z-index:0;
+    mask-image:radial-gradient(ellipse at 50% 30%, black 0%, transparent 75%);
+  }
+  .app{
+    position:relative;
+    z-index:1;
+    width:100%;
+    max-width:760px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+
+  /* HEADER */
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    border-bottom:1px solid var(--panel-border);
+    padding-bottom:10px;
+    letter-spacing:2px;
+  }
+  header h1{
+    font-family:var(--font-display), var(--font-mono);
+    font-size:22px;
+    font-weight:700;
+    letter-spacing:6px;
+    color:var(--cyan);
+    text-shadow:0 0 12px var(--cyan-glow);
+  }
+  header .clock{
+    font-size:13px;
+    color:var(--text-dim);
+    text-align:right;
+    line-height:1.4;
+  }
+  header .clock span{ color:var(--cyan); }
+
+  /* CORE / ARC REACTOR */
+  .core-wrap{
+    position:relative;
+    width:260px;
+    height:260px;
+    margin:6px auto 2px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    user-select:none;
+  }
+  .core-wrap svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
+  .ring{
+    fill:none;
+    stroke:var(--cyan-dim);
+    stroke-width:1.4;
+    opacity:0.6;
+  }
+  .ring-active{ stroke:var(--cyan); filter:drop-shadow(0 0 6px var(--cyan-glow)); }
+  .tick{
+    stroke:var(--cyan-dim);
+    stroke-width:2;
+  }
+  .core-center{
+    position:relative;
+    width:96px; height:96px;
+    border-radius:50%;
+    background:radial-gradient(circle at 40% 35%, #eafcff 0%, var(--cyan) 28%, #0a3a44 75%, transparent 100%);
+    box-shadow:
+      0 0 30px 6px var(--cyan-glow),
+      0 0 70px 20px rgba(78,231,255,0.25),
+      inset 0 0 18px rgba(255,255,255,0.5);
+    transition:box-shadow .3s ease, transform .3s ease;
+  }
+  .core-wrap.listening .core-center{
+    animation:pulse-listen 1.1s ease-in-out infinite;
+  }
+  .core-wrap.thinking .core-center{
+    animation:pulse-think 0.6s ease-in-out infinite;
+    background:radial-gradient(circle at 40% 35%, #fff7ea 0%, var(--amber) 28%, #4a2f0a 75%, transparent 100%);
+    box-shadow:0 0 30px 6px rgba(255,180,84,0.55), 0 0 70px 20px rgba(255,180,84,0.25);
+  }
+  .core-wrap.speaking .core-center{
+    animation:pulse-speak 0.45s ease-in-out infinite;
+  }
+  @keyframes pulse-listen{
+    0%,100%{ transform:scale(1); }
+    50%{ transform:scale(1.12); }
+  }
+  @keyframes pulse-think{
+    0%,100%{ transform:scale(0.94) rotate(0deg); }
+    50%{ transform:scale(1.02) rotate(8deg); }
+  }
+  @keyframes pulse-speak{
+    0%,100%{ transform:scale(1); }
+    50%{ transform:scale(1.18); }
+  }
+  .ring.spin-slow{ transform-origin:130px 130px; animation:spin 14s linear infinite; }
+  .ring.spin-rev{ transform-origin:130px 130px; animation:spin-rev 20s linear infinite; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  @keyframes spin-rev{ to{ transform:rotate(-360deg); } }
+
+  .status-label{
+    text-align:center;
+    letter-spacing:5px;
+    font-size:13px;
+    color:var(--cyan);
+    text-shadow:0 0 8px var(--cyan-glow);
+    min-height:20px;
+  }
+  .status-sub{
+    text-align:center;
+    font-size:11px;
+    color:var(--text-dim);
+    letter-spacing:2px;
+    margin-top:-4px;
+  }
+
+  /* LOG */
+  .log-panel{
+    border:1px solid var(--panel-border);
+    background:rgba(6,18,26,0.55);
+    backdrop-filter:blur(2px);
+    border-radius:4px;
+    padding:14px 16px;
+    height:280px;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    box-shadow:inset 0 0 30px rgba(0,0,0,0.4);
+  }
+  .log-panel::-webkit-scrollbar{ width:6px; }
+  .log-panel::-webkit-scrollbar-thumb{ background:var(--cyan-dim); border-radius:3px; }
+  .msg{
+    font-size:13.5px;
+    line-height:1.5;
+    max-width:92%;
+    animation:fadeIn .25s ease;
+  }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
+  .msg .who{
+    display:block;
+    font-size:10px;
+    letter-spacing:2px;
+    margin-bottom:2px;
+  }
+  .msg.user{ align-self:flex-end; text-align:right; color:#bfe9c9; }
+  .msg.user .who{ color:#6fbf83; }
+  .msg.jarvis{ align-self:flex-start; color:var(--text); }
+  .msg.jarvis .who{ color:var(--cyan); }
+  .msg.system{ align-self:center; color:var(--text-dim); font-size:11px; letter-spacing:1px; }
+
+  /* INPUT BAR */
+  .input-bar{
+    display:flex;
+    gap:10px;
+    align-items:center;
+  }
+  .input-bar input{
+    flex:1;
+    background:rgba(6,18,26,0.7);
+    border:1px solid var(--panel-border);
+    color:var(--text);
+    font-family:var(--font-mono);
+    font-size:13.5px;
+    padding:12px 14px;
+    border-radius:3px;
+    outline:none;
+    letter-spacing:0.5px;
+  }
+  .input-bar input:focus{
+    border-color:var(--cyan);
+    box-shadow:0 0 10px rgba(78,231,255,0.25);
+  }
+  .input-bar input::placeholder{ color:var(--text-dim); }
+  .btn{
+    border:1px solid var(--panel-border);
+    background:rgba(78,231,255,0.06);
+    color:var(--cyan);
+    font-family:var(--font-mono);
+    letter-spacing:2px;
+    font-size:12px;
+    padding:12px 16px;
+    border-radius:3px;
+    cursor:pointer;
+    transition:all .15s ease;
+    white-space:nowrap;
+  }
+  .btn:hover{ background:rgba(78,231,255,0.16); box-shadow:0 0 12px rgba(78,231,255,0.3); }
+  .btn:focus-visible{ outline:2px solid var(--cyan); outline-offset:2px; }
+  .btn.mic{
+    width:48px; height:48px;
+    display:flex; align-items:center; justify-content:center;
+    padding:0;
+    border-radius:50%;
+    flex-shrink:0;
+  }
+  .btn.mic.on{
+    background:rgba(255,77,77,0.12);
+    border-color:rgba(255,77,77,0.4);
+    color:var(--red);
+    box-shadow:0 0 14px rgba(255,77,77,0.35);
+  }
+  .btn.mic svg{ width:20px; height:20px; }
+
+  .controls-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:11px;
+    color:var(--text-dim);
+    letter-spacing:1px;
+  }
+  .controls-row label{ display:flex; align-items:center; gap:6px; cursor:pointer; }
+  .controls-row input[type=checkbox]{ accent-color:var(--cyan); }
+
+  .banner{
+    border:1px solid rgba(255,180,84,0.4);
+    background:rgba(255,180,84,0.06);
+    color:var(--amber);
+    font-size:11.5px;
+    padding:8px 12px;
+    border-radius:3px;
+    letter-spacing:0.5px;
+    line-height:1.5;
+    display:none;
+  }
+  .banner.show{ display:block; }
+
+  @media (prefers-reduced-motion: reduce){
+    .core-wrap.listening .core-center,
+    .core-wrap.thinking .core-center,
+    .core-wrap.speaking .core-center,
+    .ring.spin-slow, .ring.spin-rev{ animation:none !important; }
+  }
+
+  @media (max-width:480px){
+    .core-wrap{ width:210px; height:210px; }
+    header h1{ font-size:17px; letter-spacing:3px; }
+    .log-panel{ height:230px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <h1>J.A.R.V.I.S.</h1>
+    <div class="clock">
+      <div id="clockTime">--:--:--</div>
+      <div id="clockDate">----</div>
+    </div>
+  </header>
+
+  <div class="banner" id="unsupportedBanner">
+    ⚠ Voice recognition isn't supported in this browser. Use Chrome or Edge for full voice control — text input still works below.
+  </div>
+
+  <div class="core-wrap" id="coreWrap" role="button" tabindex="0" aria-label="Toggle listening">
+    <svg viewBox="0 0 260 260">
+      <g transform="translate(0,0)">
+        <circle class="ring spin-slow" cx="130" cy="130" r="118" stroke-dasharray="2 8"/>
+        <circle class="ring spin-rev ring-active" id="ringMid" cx="130" cy="130" r="96" stroke-dasharray="6 6"/>
+        <circle class="ring spin-slow" cx="130" cy="130" r="74" stroke-dasharray="1 5"/>
+      </g>
+    </svg>
+    <div class="core-center" id="coreCenter"></div>
+  </div>
+
+  <div class="status-label" id="statusLabel">SYSTEMS ONLINE</div>
+  <div class="status-sub" id="statusSub">tap the core or press the mic to talk</div>
+
+  <div class="log-panel" id="log">
+    <div class="msg system">JARVIS interface initialized. Awaiting command, sir.</div>
+  </div>
+
+  <div class="input-bar">
+    <button class="btn mic" id="micBtn" aria-label="Start listening" title="Start listening">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+        <line x1="12" y1="19" x2="12" y2="23"></line>
+        <line x1="8" y1="23" x2="16" y2="23"></line>
+      </svg>
+    </button>
+    <input type="text" id="textInput" placeholder="Type a command or question…" autocomplete="off">
+    <button class="btn" id="sendBtn">SEND</button>
+  </div>
+
+  <div class="controls-row">
+    <label><input type="checkbox" id="voiceToggle" checked> voice reply</label>
+    <span id="micStatus">mic: idle</span>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const log = document.getElementById('log');
+  const coreWrap = document.getElementById('coreWrap');
+  const statusLabel = document.getElementById('statusLabel');
+  const statusSub = document.getElementById('statusSub');
+  const micBtn = document.getElementById('micBtn');
+  const micStatus = document.getElementById('micStatus');
+  const textInput = document.getElementById('textInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const voiceToggle = document.getElementById('voiceToggle');
+  const unsupportedBanner = document.getElementById('unsupportedBanner');
+
+  // ---- Clock ----
+  function tickClock(){
+    const now = new Date();
+    document.getElementById('clockTime').textContent = now.toLocaleTimeString([], {hour12:false});
+    document.getElementById('clockDate').textContent = now.toLocaleDateString([], {weekday:'short', year:'numeric', month:'short', day:'numeric'});
+  }
+  tickClock();
+  setInterval(tickClock, 1000);
+
+  // ---- Conversation state ----
+  let history = []; // {role, content}
+  let isProcessing = false;
+
+  function addMsg(who, text){
+    const div = document.createElement('div');
+    if(who === 'system'){
+      div.className = 'msg system';
+      div.textContent = text;
+    } else {
+      div.className = 'msg ' + who;
+      const label = document.createElement('span');
+      label.className = 'who';
+      label.textContent = who === 'user' ? 'YOU' : 'JARVIS';
+      div.appendChild(label);
+      const body = document.createElement('span');
+      body.textContent = text;
+      div.appendChild(body);
+    }
+    log.appendChild(div);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function setState(state){
+    coreWrap.classList.remove('listening','thinking','speaking');
+    if(state === 'idle'){
+      statusLabel.textContent = 'SYSTEMS ONLINE';
+      statusSub.textContent = 'tap the core or press the mic to talk';
+    } else if(state === 'listening'){
+      coreWrap.classList.add('listening');
+      statusLabel.textContent = 'LISTENING';
+      statusSub.textContent = 'speak your command, sir';
+    } else if(state === 'thinking'){
+      coreWrap.classList.add('thinking');
+      statusLabel.textContent = 'PROCESSING';
+      statusSub.textContent = 'analyzing request…';
+    } else if(state === 'speaking'){
+      coreWrap.classList.add('speaking');
+      statusLabel.textContent = 'RESPONDING';
+      statusSub.textContent = '';
+    }
+  }
+
+  // ---- Speech Recognition (STT) ----
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recognition = null;
+  let listening = false;
+  let manuallyStoppedMic = false;
+
+  if(SR){
+    recognition = new SR();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    let finalTranscript = '';
+
+    recognition.onstart = function(){
+      listening = true;
+      micBtn.classList.add('on');
+      micStatus.textContent = 'mic: live';
+      if(!isProcessing) setState('listening');
+    };
+
+    recognition.onresult = function(event){
+      let interim = '';
+      for(let i = event.resultIndex; i < event.results.length; i++){
+        const transcript = event.results[i][0].transcript;
+        if(event.results[i].isFinal){
+          finalTranscript += transcript;
+        } else {
+          interim += transcript;
+        }
+      }
+      if(finalTranscript.trim().length > 0){
+        const command = finalTranscript.trim();
+        finalTranscript = '';
+        handleUserInput(command);
+      }
+    };
+
+    recognition.onerror = function(event){
+      micStatus.textContent = 'mic: error (' + event.error + ')';
+      if(event.error === 'not-allowed' || event.error === 'service-not-allowed'){
+        addMsg('system', 'Microphone access denied. Enable mic permissions to use voice control.');
+        listening = false;
+        micBtn.classList.remove('on');
+        manuallyStoppedMic = true;
+      }
+    };
+
+    recognition.onend = function(){
+      micBtn.classList.remove('on');
+      micStatus.textContent = 'mic: idle';
+      // auto-restart for "continuous" feel unless user turned it off or we're mid-response
+      if(listening && !manuallyStoppedMic){
+        try{ recognition.start(); micBtn.classList.add('on'); micStatus.textContent = 'mic: live'; }
+        catch(e){ /* already started */ }
+      } else if(!isProcessing){
+        setState('idle');
+      }
+    };
+  } else {
+    unsupportedBanner.classList.add('show');
+    micBtn.disabled = true;
+  }
+
+  function toggleMic(){
+    if(!recognition) return;
+    if(listening){
+      listening = false;
+      manuallyStoppedMic = true;
+      recognition.stop();
+      setState('idle');
+    } else {
+      manuallyStoppedMic = false;
+      try{ recognition.start(); } catch(e){}
+    }
+  }
+
+  micBtn.addEventListener('click', toggleMic);
+  coreWrap.addEventListener('click', toggleMic);
+  coreWrap.addEventListener('keydown', function(e){
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggleMic(); }
+  });
+
+  // ---- Speech Synthesis (TTS) ----
+  function speak(text){
+    if(!voiceToggle.checked || !('speechSynthesis' in window)){
+      setState(listening ? 'listening' : 'idle');
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 1.02;
+    utter.pitch = 0.85;
+    const voices = window.speechSynthesis.getVoices();
+    const preferred = voices.find(v => /male|daniel|google uk english male|david/i.test(v.name)) || voices[0];
+    if(preferred) utter.voice = preferred;
+
+    utter.onstart = function(){ setState('speaking'); };
+    utter.onend = function(){
+      setState(listening ? 'listening' : 'idle');
+    };
+    window.speechSynthesis.speak(utter);
+  }
+
+  // ---- Claude API call ----
+  async function askClaude(userText){
+    const systemPrompt = "You are JARVIS, a poised, dryly witty AI assistant inspired by Tony Stark's system. Address the user as 'sir' occasionally, not every line. Keep answers concise (2-4 sentences unless detail is genuinely requested), precise, and useful. No markdown formatting since this is read aloud and shown in a HUD log.";
+
+    const messages = history.concat([{role:'user', content: userText}]);
+
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: messages
+      })
+    });
+
+    if(!response.ok){
+      throw new Error("API error " + response.status);
+    }
+    const data = await response.json();
+    const textBlock = (data.content || []).find(b => b.type === 'text');
+    const reply = textBlock ? textBlock.text : "I encountered a problem formulating a response, sir.";
+    return reply;
+  }
+
+  async function handleUserInput(text){
+    if(!text || isProcessing) return;
+    isProcessing = true;
+    addMsg('user', text);
+    setState('thinking');
+
+    try{
+      const reply = await askClaude(text);
+      history.push({role:'user', content:text});
+      history.push({role:'assistant', content:reply});
+      // keep history bounded
+      if(history.length > 20) history = history.slice(history.length - 20);
+
+      addMsg('jarvis', reply);
+      isProcessing = false;
+      speak(reply);
+    } catch(err){
+      isProcessing = false;
+      const msg = "I'm having trouble reaching my reasoning core. Please try again in a moment.";
+      addMsg('jarvis', msg);
+      speak(msg);
+    }
+  }
+
+  sendBtn.addEventListener('click', function(){
+    const val = textInput.value;
+    textInput.value = '';
+    handleUserInput(val);
+  });
+  textInput.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){
+      const val = textInput.value;
+      textInput.value = '';
+      handleUserInput(val);
+    }
+  });
+
+  setState('idle');
+})();
+</script>
+</body>
+</html>
